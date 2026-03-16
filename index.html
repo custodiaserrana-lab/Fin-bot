@@ -334,6 +334,19 @@ textarea::placeholder{color:var(--mu)}
     </div>
     <div class="hdr-right" style="gap:4px">
       <div class="live-dot" id="liveDot"></div>
+      <!-- LINKS A PÁGINAS EXTERNAS -->
+      <a href="tv-dashboard.html" title="Dashboard TradingView"
+        style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;
+          background:var(--s1);border:1px solid var(--br);border-radius:8px;
+          text-decoration:none;font-size:.85rem;transition:all .2s;cursor:pointer"
+        onmouseover="this.style.borderColor='var(--pur)'"
+        onmouseout="this.style.borderColor='var(--br)'">📊</a>
+      <a href="tpo-alerts.html" title="TPO Market Profile &amp; Alertas"
+        style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;
+          background:var(--s1);border:1px solid var(--br);border-radius:8px;
+          text-decoration:none;font-size:.85rem;transition:all .2s;cursor:pointer"
+        onmouseover="this.style.borderColor='#ff6b35'"
+        onmouseout="this.style.borderColor='var(--br)'">🎯</a>
       <button class="hbtn" onclick="openApiModal()" title="Configurar API keys">⚙️</button>
       <button class="hbtn" onclick="goTo('Alerts')" title="Alertas">🔔<div class="bbadge" id="bellBadge">5</div></button>
       <button class="hbtn" onclick="downloadMe()" title="Descargar app">⬇</button>
@@ -902,6 +915,34 @@ textarea::placeholder{color:var(--mu)}
         style="flex:1;background:#2AABEE15;border:2px solid #2AABEE50;color:#2AABEE;border-radius:14px;padding:14px;font-size:.78rem;cursor:pointer;font-weight:800;letter-spacing:.02em">
         ✈️ ENVIAR A TELEGRAM
       </button>
+    </div>
+
+    <!-- ACCESO RÁPIDO A HERRAMIENTAS EXTERNAS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <a href="tv-dashboard.html"
+        style="text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;
+          gap:6px;padding:14px 10px;background:var(--pur)10;border:1px solid var(--pur)30;
+          border-radius:12px;transition:all .2s;cursor:pointer"
+        onmouseover="this.style.background='var(--pur)20';this.style.borderColor='var(--pur)60'"
+        onmouseout="this.style.background='var(--pur)10';this.style.borderColor='var(--pur)30'">
+        <span style="font-size:1.4rem">📊</span>
+        <div style="text-align:center">
+          <div style="font-size:.65rem;font-weight:800;color:var(--pur)">DASHBOARD TV</div>
+          <div style="font-size:.5rem;color:var(--mu);margin-top:1px">Charts · Heatmap · Noticias · Calendario</div>
+        </div>
+      </a>
+      <a href="tpo-alerts.html"
+        style="text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;
+          gap:6px;padding:14px 10px;background:#ff6b3510;border:1px solid #ff6b3530;
+          border-radius:12px;transition:all .2s;cursor:pointer"
+        onmouseover="this.style.background='#ff6b3520';this.style.borderColor='#ff6b3560'"
+        onmouseout="this.style.background='#ff6b3510';this.style.borderColor='#ff6b3530'">
+        <span style="font-size:1.4rem">🎯</span>
+        <div style="text-align:center">
+          <div style="font-size:.65rem;font-weight:800;color:#ff6b35">TPO MARKET PROFILE</div>
+          <div style="font-size:.5rem;color:var(--mu);margin-top:1px">POC · VAH · VAL · Poor H/L · Single Print</div>
+        </div>
+      </a>
     </div>
 
     <!-- ═══ MEJORA: DETECTOR DE PÁNICO + PRESIÓN CAMBIARIA ═ -->
