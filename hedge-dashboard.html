@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinBot AR — Institutional Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #020305;
+  --deep: #060810;
+  --panel: #0a0d14;
+  --card: #0e1219;
+  --lift: #141824;
+  --rim: #1c2130;
+  --wire: #242d40;
+  --text: #e8eaf2;
+  --mute: #4a5270;
+  --ghost: #2a3048;
+  --gold: #c8a84b;
+  --gold2: #f0d080;
+  --red: #e03a3a;
+  --grn: #2ecc71;
+  --grn2: #1a9950;
+  --blu: #3a7bd5;
+  --cyan: #00d4ff;
+  --warn: #e8a020;
+  --mono: 'DM Mono', monospace;
+  --display: 'Bebas Neue', sans-serif;
+  --serif: 'Fraunces', serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 14px; scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+/* ── SCANLINE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+}
+
+/* ── GRID BACKGROUND ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(200,168,75,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,168,75,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* ── HEADER ── */
+.hdr {
+  position: sticky; top: 0; z-index: 100;
+  background: linear-gradient(180deg, var(--void) 0%, rgba(2,3,5,0.95) 100%);
+  border-bottom: 1px solid var(--rim);
+  padding: 12px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  backdrop-filter: blur(20px);
+}
+
+.hdr-brand {
+  display: flex; align-items: baseline; gap: 12px;
+}
+
+.hdr-logo {
+  font-family: var(--display);
+  font-size: 1.8rem;
+  letter-spacing: .12em;
+  color: var(--text);
+  line-height: 1;
+}
+
+.hdr-logo em {
+  color: var(--gold);
+  font-style: normal;
+}
+
+.hdr-sub {
+  font-size: .6rem;
+  color: var(--mute);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  border-left: 1px solid var(--wire);
+  padding-left: 12px;
+}
+
+.hdr-right {
+  display: flex; align-items: center; gap: 16px;
+}
+
+.hdr-time {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  letter-spacing: .08em;
+  color: var(--gold);
+}
+
+.hdr-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .6rem;
+  color: var(--mute);
+  letter-spacing: .1em;
+}
+
+.pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--grn);
+  box-shadow: 0 0 8px var(--grn);
+  animation: pulseAnim 2s ease-in-out infinite;
+}
+@keyframes pulseAnim {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:.4; transform:scale(.8); }
+}
+
+.back-btn {
+  font-family: var(--mono); font-size: .6rem;
+  color: var(--mute); text-decoration: none;
+  padding: 5px 12px; border: 1px solid var(--wire);
+  border-radius: 3px; transition: all .2s;
+  letter-spacing: .08em;
+}
+.back-btn:hover { color: var(--gold); border-color: var(--gold)50; }
+
+/* ── TICKER TAPE ── */
+.ticker {
+  background: var(--deep);
+  border-bottom: 1px solid var(--rim);
+  padding: 6px 0;
+  overflow: hidden;
+  position: relative;
+}
+.ticker::before, .ticker::after {
+  content: '';
+  position: absolute; top: 0; bottom: 0; width: 60px; z-index: 2;
+}
+.ticker::before { left: 0; background: linear-gradient(90deg, var(--deep), transparent); }
+.ticker::after  { right: 0; background: linear-gradient(-90deg, var(--deep), transparent); }
+
+.ticker-track {
+  display: flex; gap: 0;
+  animation: tickerScroll 30s linear infinite;
+  width: max-content;
+}
+@keyframes tickerScroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.tick-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 24px;
+  border-right: 1px solid var(--wire);
+  font-size: .62rem;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+.tick-sym { color: var(--gold); font-weight: 500; }
+.tick-price { color: var(--text); }
+.tick-chg.up { color: var(--grn); }
+.tick-chg.dn { color: var(--red); }
+
+/* ── LAYOUT ── */
+.main { position: relative; z-index: 1; padding: 20px 24px 60px; max-width: 1400px; margin: 0 auto; }
+
+/* ── SECTION HEADER ── */
+.section-hdr {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px; margin-top: 24px;
+}
+.section-line {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--gold)40, transparent);
+}
+.section-title {
+  font-family: var(--display);
+  font-size: 1rem; letter-spacing: .15em;
+  color: var(--gold); text-transform: uppercase;
+}
+
+/* ── MARKET STATUS STRIP ── */
+.market-strip {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mstat {
+  background: var(--card);
+  border: 1px solid var(--rim);
+  border-radius: 4px;
+  padding: 10px 12px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.mstat::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.mstat.ok::before  { background: var(--grn); }
+.mstat.warn::before { background: var(--warn); }
+.mstat.bad::before { background: var(--red); }
+.mstat:hover { border-color: var(--gold)40; }
+
+.mstat-label { font-size: .52rem; color: var(--mute); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; }
+.mstat-val   { font-family: var(--display); font-size: 1.3rem; letter-spacing: .06em; line-height: 1; }
+.mstat-sub   { font-size: .5rem; color: var(--mute); margin-top: 3px; }
+
+/* ── MAIN GRID ── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: auto;
+  gap: 12px;
+}
+
+.span-2 { grid-column: span 2; }
+.span-3 { grid-column: span 3; }
+
+/* ── CARD ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--rim);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: border-color .3s, transform .2s;
+}
+.card:hover { border-color: var(--gold)30; }
+
+.card-hdr {
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid var(--rim);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-family: var(--display);
+  font-size: .85rem; letter-spacing: .12em;
+  color: var(--gold); text-transform: uppercase;
+}
+.card-sub { font-size: .52rem; color: var(--mute); letter-spacing: .08em; }
+.card-body { padding: 12px 14px; }
+
+/* ── ANÁLISIS INSTITUCIONAL ── */
+.inst-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.inst-btn {
+  background: var(--panel);
+  border: 1px solid var(--wire);
+  border-radius: 4px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all .2s;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+.inst-btn::before {
+  content: '';
+  position: absolute; top: 0; left: 0; width: 2px; height: 100%;
+  background: var(--gold);
+  transform: scaleY(0);
+  transition: transform .2s;
+}
+.inst-btn:hover {
+  border-color: var(--gold)50;
+  background: var(--lift);
+}
+.inst-btn:hover::before { transform: scaleY(1); }
+
+.inst-label {
+  font-family: var(--display);
+  font-size: .8rem; letter-spacing: .1em;
+  color: var(--text); margin-bottom: 3px;
+}
+.inst-desc {
+  font-size: .52rem; color: var(--mute); line-height: 1.5;
+}
+.inst-firm {
+  font-size: .48rem; color: var(--gold)70;
+  letter-spacing: .1em; margin-top: 5px;
+  text-transform: uppercase;
+}
+
+/* ── TICKER INPUT ── */
+.ticker-input-wrap {
+  display: flex; gap: 6px; margin-bottom: 12px;
+  align-items: center;
+}
+.ticker-input {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--wire);
+  border-radius: 3px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-family: var(--display);
+  font-size: .9rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  outline: none;
+  transition: border-color .2s;
+}
+.ticker-input:focus { border-color: var(--gold)60; }
+.ticker-input::placeholder { color: var(--mute); }
+
+.exec-btn {
+  background: var(--gold)15;
+  border: 1px solid var(--gold)40;
+  border-radius: 3px;
+  padding: 8px 16px;
+  color: var(--gold);
+  font-family: var(--display);
+  font-size: .75rem;
+  letter-spacing: .1em;
+  cursor: pointer;
+  transition: all .2s;
+}
+.exec-btn:hover { background: var(--gold)25; border-color: var(--gold)70; }
+.exec-btn:active { transform: scale(.98); }
+
+/* ── ANÁLISIS OUTPUT ── */
+.analysis-output {
+  background: var(--panel);
+  border: 1px solid var(--wire);
+  border-radius: 4px;
+  padding: 14px;
+  min-height: 200px;
+  font-size: .68rem;
+  line-height: 1.8;
+  color: var(--text);
+  position: relative;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  max-height: 400px;
+}
+.analysis-output.loading::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, var(--gold)08 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.output-placeholder {
+  color: var(--mute);
+  font-size: .62rem;
+  letter-spacing: .05em;
+  line-height: 2;
+}
+
+/* ── SEÑAL DEL DÍA ── */
+.signal-card {
+  background: linear-gradient(135deg, var(--card) 0%, var(--panel) 100%);
+  border: 1px solid var(--gold)30;
+  border-radius: 4px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.signal-card::before {
+  content: 'SEÑAL';
+  position: absolute; top: -8px; right: 12px;
+  font-family: var(--display);
+  font-size: 4rem;
+  color: var(--gold)05;
+  letter-spacing: .1em;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.signal-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--wire);
+}
+.signal-row:last-child { border-bottom: none; }
+.signal-key { font-size: .55rem; color: var(--mute); letter-spacing: .12em; text-transform: uppercase; }
+.signal-val { font-family: var(--display); font-size: 1rem; letter-spacing: .06em; }
+.signal-val.up  { color: var(--grn); }
+.signal-val.dn  { color: var(--red); }
+.signal-val.neu { color: var(--gold); }
+
+/* ── PORTFOLIO ── */
+.port-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 80px 60px 60px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--wire)50;
+  font-size: .62rem;
+}
+.port-row:last-child { border-bottom: none; }
+.port-sym { font-family: var(--display); font-size: .85rem; color: var(--gold); letter-spacing: .08em; }
+.port-bar { height: 3px; background: var(--wire); border-radius: 2px; position: relative; }
+.port-bar-fill { height: 100%; border-radius: 2px; }
+.port-pct { text-align: right; }
+.port-score { text-align: center; }
+.score-dot {
+  display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%;
+}
+
+/* ── ESCUDO AR ── */
+.shield-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 9px 0; border-bottom: 1px solid var(--wire)50;
+}
+.shield-item:last-child { border-bottom: none; }
+.shield-icon {
+  font-size: .85rem; flex-shrink: 0;
+  width: 28px; height: 28px;
+  background: var(--lift);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--wire);
+}
+.shield-label { font-size: .62rem; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.shield-body  { font-size: .56rem; color: var(--mute); line-height: 1.6; }
+
+/* ── MACRO INDICATORS ── */
+.macro-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.macro-item {
+  background: var(--panel);
+  border: 1px solid var(--wire);
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+.macro-lbl { font-size: .5rem; color: var(--mute); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 4px; }
+.macro-val { font-family: var(--display); font-size: 1.2rem; letter-spacing: .06em; }
+.macro-ctx { font-size: .52rem; color: var(--mute); margin-top: 3px; line-height: 1.5; }
+.bar-h { height: 2px; background: var(--wire); border-radius: 2px; margin-top: 6px; }
+.bar-h-fill { height: 100%; border-radius: 2px; transition: width .8s ease; }
+
+/* ── FOOTER ── */
+.footer {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(0deg, var(--void) 0%, rgba(2,3,5,0.95) 100%);
+  border-top: 1px solid var(--rim);
+  padding: 6px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .5rem; color: var(--mute); letter-spacing: .08em;
+  z-index: 100;
+}
+
+/* ── LOADING SPINNER ── */
+.spinner {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border: 1px solid var(--wire);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── MOBILE ── */
+@media (max-width: 900px) {
+  .market-strip { grid-template-columns: repeat(3, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .span-2, .span-3 { grid-column: span 1; }
+  .inst-grid { grid-template-columns: 1fr; }
+  .macro-grid { grid-template-columns: 1fr; }
+  .main { padding: 12px 14px 80px; }
+}
+
+/* ── ANIM ENTRANCE ── */
+.card { animation: fadeUp .4s ease both; }
+.card:nth-child(1) { animation-delay: .05s; }
+.card:nth-child(2) { animation-delay: .1s; }
+.card:nth-child(3) { animation-delay: .15s; }
+.card:nth-child(4) { animation-delay: .2s; }
+.card:nth-child(5) { animation-delay: .25s; }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-logo">Fin<em>Bot</em> AR</div>
+    <div class="hdr-sub">Institutional Research Platform</div>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-status">
+      <div class="pulse"></div>
+      <span id="mktStatus">MERCADOS ABIERTOS</span>
+    </div>
+    <div class="hdr-time" id="clock">--:--:--</div>
+    <a href="https://custodiaserrana-lab.github.io/Fin-bot/" class="back-btn">← BOT PRINCIPAL</a>
+  </div>
+</header>
+
+<!-- TICKER TAPE -->
+<div class="ticker">
+  <div class="ticker-track" id="tickerTrack">
+    <!-- populated by JS -->
+  </div>
+</div>
+
+<main class="main">
+
+<!-- MARKET STATUS STRIP -->
+<div class="market-strip">
+  <div class="mstat bad">
+    <div class="mstat-label">VIX</div>
+    <div class="mstat-val" style="color:var(--red)" id="ms-vix">31.2</div>
+    <div class="mstat-sub">VOLATILIDAD ALTA</div>
+  </div>
+  <div class="mstat bad">
+    <div class="mstat-label">BRENT USD</div>
+    <div class="mstat-val" style="color:var(--warn)" id="ms-brent">104.5</div>
+    <div class="mstat-sub">⚔️ CONFLICTO ACTIVO</div>
+  </div>
+  <div class="mstat warn">
+    <div class="mstat-label">RIESGO PAÍS</div>
+    <div class="mstat-val" style="color:var(--warn)" id="ms-rp">575</div>
+    <div class="mstat-sub">BPS — ALERTA</div>
+  </div>
+  <div class="mstat ok">
+    <div class="mstat-label">USD MEP</div>
+    <div class="mstat-val" style="color:var(--text)" id="ms-mep">$1.437</div>
+    <div class="mstat-sub">BRECHA ~0.1%</div>
+  </div>
+  <div class="mstat ok">
+    <div class="mstat-label">RESERVAS BCRA</div>
+    <div class="mstat-val" style="color:var(--grn)" id="ms-res">46.5B</div>
+    <div class="mstat-sub">USD — ESTABLE</div>
+  </div>
+  <div class="mstat warn">
+    <div class="mstat-label">ORO USD</div>
+    <div class="mstat-val" style="color:var(--gold)" id="ms-gold">2.910</div>
+    <div class="mstat-sub">REFUGIO ACTIVO</div>
+  </div>
+</div>
+
+<!-- DASHBOARD GRID -->
+<div class="dashboard-grid">
+
+  <!-- ANÁLISIS INSTITUCIONAL -->
+  <div class="card span-2">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Análisis Institucional</div>
+        <div class="card-sub">10 MODELOS · GOLDMAN · MORGAN · JPMORGAN · BLACKROCK · CITADEL</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="text" class="ticker-input" id="tickerInput" placeholder="TICKER" style="width:100px">
+        <select id="visionSelect" style="background:var(--panel);border:1px solid var(--wire);border-radius:3px;padding:7px 10px;color:var(--text);font-family:var(--mono);font-size:.6rem;outline:none">
+          <option value="alcista">Alcista</option>
+          <option value="bajista">Bajista</option>
+          <option value="neutro">Neutro</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="inst-grid" style="margin-bottom:12px">
+        <div class="inst-btn" onclick="runAnalysis('fundamental')">
+          <div class="inst-label">01 · Empresa</div>
+          <div class="inst-desc">Análisis fundamental completo con veredicto</div>
+          <div class="inst-firm">Goldman Sachs Style</div>
+        </div>
+        <div class="inst-btn" onclick="runAnalysis('tecnico')">
+          <div class="inst-label">02 · Técnico</div>
+          <div class="inst-desc">EMAs, RSI, MACD, Fibonacci, entrada y stop</div>
+          <div class="inst-firm">Morgan Stanley Style</div>
+        </div>
+        <div class="inst-btn" onclick="runAnalysis('riesgo')">
+          <div class="inst-label">03 · Riesgo</div>
+          <div class="inst-desc">Beta, drawdown, correlación, protección</div>
+          <div class="inst-firm">Hedge Fund Style</div>
+        </div>
+        <div class="inst-btn" onclick="runAnalysis('earnings')">
+          <div class="inst-label">04 · Earnings</div>
+          <div class="inst-desc">Pre/post resultados, estrategia de posición</div>
+          <div class="inst-firm">JPMorgan Style</div>
+        </div>
+        <div class="inst-btn" onclick="runAnalysis('dividendos')">
+          <div class="inst-label">05 · Dividendos</div>
+          <div class="inst-desc">Yield, payout, proyección 10-20 años</div>
+          <div class="inst-firm">BlackRock Style</div>
+        </div>
+        <div class="inst-btn" onclick="runAnalysis('macro')">
+          <div class="inst-label">06 · Macro</div>
+          <div class="inst-desc">Ciclo económico y flujo institucional</div>
+          <div class="inst-firm">Citadel Style</div>
+        </div>
+        <div class="inst-btn" onclick="runAnalysis('ciclo')">
+          <div class="inst-label">07 · Sectores</div>
+          <div class="inst-desc">Rotación sectorial y ETFs a sobreponderar</div>
+          <div class="inst-firm">Estrategia Macro</div>
+        </div>
+        <div class="inst-btn" onclick="runAnalysis('cartera')">
+          <div class="inst-label">08 · Cartera</div>
+          <div class="inst-desc">Cartera perfecta ETF con rebalanceo</div>
+          <div class="inst-firm">Asesor Senior</div>
+        </div>
+        <div class="inst-btn" onclick="runAnalysis('opciones')">
+          <div class="inst-label">09 · Opciones</div>
+          <div class="inst-desc">Estrategia profesional con P&L definido</div>
+          <div class="inst-firm">Prop Desk Style</div>
+        </div>
+        <div class="inst-btn" onclick="runAnalysis('senal')">
+          <div class="inst-label">10 · Señal del Día</div>
+          <div class="inst-desc">La mejor oportunidad ahora con R:R</div>
+          <div class="inst-firm">Señal Institucional</div>
+        </div>
+      </div>
+      <div class="analysis-output" id="analysisOutput">
+        <div class="output-placeholder">
+          ▸ Seleccioná un análisis arriba para ejecutar<br>
+          ▸ Ingresá el ticker en el campo superior (ej: LMT, NVDA, MELI)<br>
+          ▸ El análisis usa el contexto de mercado actual en tiempo real<br><br>
+          <span style="color:var(--gold)40">Powered by Groq LLaMA 3.3 70B · Contexto AR actualizado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEÑAL DEL DÍA -->
+  <div class="card">
+    <div class="card-hdr">
+      <div>
+        <div class="card-title">Señal del Día</div>
+        <div class="card-sub">OPORTUNIDAD INSTITUCIONAL</div>
+      </div>
+      <button class="exec-btn" onclick="generateSignal()" style="font-size:.6rem;padding:5px 10px">
+        ↻ GENERAR
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="signal-card" id="signalCard">
+        <div class="signal-row">
+          <span class="signal-key">Activo</span>
+          <span class="signal-val neu" id="sig-activo">—</span>
+        </div>
+        <div class="signal-row">
+          <span class="signal-key">Entrada</span>
+          <span class="signal-val" id="sig-entrada">—</span>
+        </div>
+        <div class="signal-row">
+          <span class="signal-key">Stop Loss</span>
+          <span class="signal-val dn" id="sig-stop">—</span>
+        </div>
+        <div class="signal-row">
+          <span class="signal-key">Objetivo 1</span>
+          <span class="signal-val up" id="sig-obj1">—</span>
+        </div>
+        <div class="signal-row">
+          <span class="signal-key">Objetivo 2</span>
+          <span class="signal-val up" id="sig-obj2">—</span>
+        </div>
+        <div class="signal-row">
+          <span class="signal-key">Ratio R:R</span>
+          <span class="signal-val neu" id="sig-rr">—</span>
+        </div>
+        <div style="margin-top:10px;font-size:.6rem;color:var(--mute);line-height:1.7" id="sig-ctx">
+          Tocá "GENERAR" para obtener la señal del día con contexto actual.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARTERA -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-title">Mi Cartera</div>
+      <div class="card-sub">SCORE POR ACTIVO · CONTEXTO ACTUAL</div>
+    </div>
+    <div class="card-body" id="portBody">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- MACRO INDICATORS -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-title">Indicadores Macro</div>
+      <div class="card-sub">LIVE · BCRA · GLOBAL</div>
+    </div>
+    <div class="card-body">
+      <div class="macro-grid">
+        <div class="macro-item">
+          <div class="macro-lbl">Inflación AR Anual</div>
+          <div class="macro-val" style="color:var(--red)">80%</div>
+          <div class="macro-ctx">Tasa Pesos Plus: 29.25% — Tasa real negativa</div>
+          <div class="bar-h"><div class="bar-h-fill" style="width:80%;background:var(--red)"></div></div>
+        </div>
+        <div class="macro-item">
+          <div class="macro-lbl">Dólar Blue</div>
+          <div class="macro-val" id="mac-blue" style="color:var(--text)">$—</div>
+          <div class="macro-ctx" id="mac-blue-sub">Actualizando...</div>
+          <div class="bar-h"><div class="bar-h-fill" style="width:30%;background:var(--grn)"></div></div>
+        </div>
+        <div class="macro-item">
+          <div class="macro-lbl">S&P 500</div>
+          <div class="macro-val" style="color:var(--warn)">5.521</div>
+          <div class="macro-ctx">VIX 31 — Corrección por conflicto. -4% en 8 días.</div>
+          <div class="bar-h"><div class="bar-h-fill" style="width:55%;background:var(--warn)"></div></div>
+        </div>
+        <div class="macro-item">
+          <div class="macro-lbl">BTC</div>
+          <div class="macro-val" id="mac-btc" style="color:var(--gold)">$—</div>
+          <div class="macro-ctx" id="mac-btc-sub">Actualizando...</div>
+          <div class="bar-h"><div class="bar-h-fill" style="width:45%;background:var(--gold)"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESCUDO DEFENSIVO AR -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-title">Escudo Defensivo AR</div>
+      <div class="card-sub">PROTECCIÓN ANTE SHOCKS · ACTIVO AHORA</div>
+    </div>
+    <div class="card-body">
+      <div class="shield-item">
+        <div class="shield-icon">💵</div>
+        <div>
+          <div class="shield-label">Dolarización MEP</div>
+          <div class="shield-body">Brecha ~0.1% — ventana de compra ideal. Sin cupo, T+1. Cocos 0.54% comisión. Protección directa contra devaluación.</div>
+        </div>
+      </div>
+      <div class="shield-item">
+        <div class="shield-icon">📊</div>
+        <div>
+          <div class="shield-label">CEDEARs como cobertura cambiaria</div>
+          <div class="shield-body">Tus CEDEARs replican precio USD. Si el tipo de cambio sube, el CEDEAR sube en pesos automáticamente. Cobertura natural.</div>
+        </div>
+      </div>
+      <div class="shield-item">
+        <div class="shield-icon">🛢️</div>
+        <div>
+          <div class="shield-label">Energía como escudo inflación importada</div>
+          <div class="shield-body">Brent USD 104 → inflación importada en 60-90 días. XLE, CVX, VIST son el escudo natural. Ya en tu cartera.</div>
+        </div>
+      </div>
+      <div class="shield-item">
+        <div class="shield-icon">💰</div>
+        <div>
+          <div class="shield-label">Fondos Cocos contra inflación</div>
+          <div class="shield-body">Pesos Plus: 29.25% anual T+1. Dólares Plus: 6.70% anual USD T+1. Sin costo de entrada ni salida.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- API CONFIG -->
+  <div class="card">
+    <div class="card-hdr">
+      <div class="card-title">Configuración</div>
+      <div class="card-sub">API KEY · MOTOR IA</div>
+    </div>
+    <div class="card-body">
+      <div style="margin-bottom:10px">
+        <div style="font-size:.52rem;color:var(--mute);letter-spacing:.1em;margin-bottom:5px">GROQ API KEY</div>
+        <input type="password" id="groqKey" placeholder="gsk_..." style="width:100%;background:var(--panel);border:1px solid var(--wire);border-radius:3px;padding:7px 10px;color:var(--text);font-family:var(--mono);font-size:.65rem;outline:none">
+      </div>
+      <button onclick="saveConfig()" class="exec-btn" style="width:100%;font-size:.65rem;padding:9px">
+        GUARDAR CONFIGURACIÓN
+      </button>
+      <div id="configStatus" style="font-size:.55rem;color:var(--mute);text-align:center;margin-top:6px"></div>
+      <div style="margin-top:12px;font-size:.52rem;color:var(--mute);line-height:1.8">
+        Key guardada solo en tu dispositivo.<br>
+        Groq: 500k tokens/día gratis → <a href="https://console.groq.com" target="_blank" style="color:var(--gold)70">console.groq.com</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>FINBOT AR · INSTITUTIONAL RESEARCH · Buenos Aires, Argentina</span>
+  <span id="footerData">Datos en tiempo real · Bluelytics · Binance · CoinGecko</span>
+  <span id="lastUpdate">Actualizando...</span>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// FINBOT AR — INSTITUTIONAL DASHBOARD
+// ══════════════════════════════════════════════════════
+
+let GROQ_KEY = localStorage.getItem('hd_groq_key') || '';
+
+// ── Hora BsAs ─────────────────────────────────────────
+function updateClock() {
+  const t = new Date().toLocaleTimeString('es-AR',{
+    hour:'2-digit',minute:'2-digit',second:'2-digit',
+    timeZone:'America/Argentina/Buenos_Aires'
+  });
+  document.getElementById('clock').textContent = t;
+  const h = parseInt(t.split(':')[0]);
+  const isOpen = h >= 11 && h < 17;
+  document.getElementById('mktStatus').textContent = isOpen ? 'MERCADOS ABIERTOS' : 'MERCADOS CERRADOS';
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Config ────────────────────────────────────────────
+function saveConfig() {
+  const key = document.getElementById('groqKey').value.trim();
+  if (key) {
+    GROQ_KEY = key;
+    localStorage.setItem('hd_groq_key', key);
+    document.getElementById('configStatus').textContent = '✅ Key guardada';
+    document.getElementById('configStatus').style.color = 'var(--grn)';
+  }
+}
+if (GROQ_KEY) {
+  document.getElementById('groqKey').value = GROQ_KEY;
+  document.getElementById('configStatus').textContent = '✅ Key activa';
+  document.getElementById('configStatus').style.color = 'var(--grn)';
+}
+
+// ── CORS Proxy ────────────────────────────────────────
+const PROXIES = [
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+];
+async function corsGet(url) {
+  const noproxy = ['api.groq.com','api.binance.com','api.alternative.me','api.telegram.org'];
+  if (noproxy.some(d => url.includes(d))) {
+    return fetch(url).then(r => r.json());
+  }
+  for (const px of PROXIES) {
+    try {
+      const res = await fetch(px(url));
+      if (!res.ok) continue;
+      return await res.json();
+    } catch(e) { continue; }
+  }
+  throw new Error('Proxy fallido');
+}
+
+// ── Ticker tape ───────────────────────────────────────
+const TICKERS_DATA = [
+  {sym:'LMT',  price:'$495.20', chg:'+3.37%', up:true},
+  {sym:'XLE',  price:'$92.10',  chg:'+2.18%', up:true},
+  {sym:'CVX',  price:'$158.40', chg:'+1.92%', up:true},
+  {sym:'VIST', price:'$48.30',  chg:'+4.10%', up:true},
+  {sym:'NVDA', price:'$138.50', chg:'-1.20%', up:false},
+  {sym:'AAPL', price:'$225.10', chg:'-0.45%', up:false},
+  {sym:'MELI', price:'$2.104',  chg:'+0.80%', up:true},
+  {sym:'PLTR', price:'$92.80',  chg:'+1.50%', up:true},
+  {sym:'KO',   price:'$68.20',  chg:'+0.30%', up:true},
+  {sym:'BRENT',price:'$104.5',  chg:'+2.80%', up:true},
+  {sym:'GOLD', price:'$2.910',  chg:'+1.20%', up:true},
+  {sym:'BTC',  price:'$83.200', chg:'-0.90%', up:false},
+  {sym:'VIX',  price:'31.2',    chg:'+8.50%', up:false},
+  {sym:'MEP',  price:'$1.437',  chg:'+0.10%', up:true},
+];
+
+function buildTicker() {
+  const track = document.getElementById('tickerTrack');
+  const items = [...TICKERS_DATA, ...TICKERS_DATA]; // duplicar para loop
+  track.innerHTML = items.map(t => `
+    <div class="tick-item">
+      <span class="tick-sym">${t.sym}</span>
+      <span class="tick-price">${t.price}</span>
+      <span class="tick-chg ${t.up?'up':'dn'}">${t.chg}</span>
+    </div>`).join('');
+}
+buildTicker();
+
+// ── Cartera con scores ────────────────────────────────
+const CARTERA = [
+  {sym:'LMT',  nombre:'Lockheed',     peso:15, score:9, color:'var(--red)'},
+  {sym:'NVDA', nombre:'NVIDIA',        peso:12, score:6, color:'var(--grn)'},
+  {sym:'MELI', nombre:'MercadoLibre', peso:12, score:7, color:'var(--grn)'},
+  {sym:'XLE',  nombre:'ETF Energía',  peso:10, score:9, color:'var(--warn)'},
+  {sym:'CVX',  nombre:'Chevron',      peso:8,  score:8, color:'var(--warn)'},
+  {sym:'VIST', nombre:'Vista Energy', peso:8,  score:8, color:'var(--warn)'},
+  {sym:'AAPL', nombre:'Apple',        peso:8,  score:6, color:'var(--grn)'},
+  {sym:'MSFT', nombre:'Microsoft',    peso:7,  score:7, color:'var(--grn)'},
+  {sym:'PLTR', nombre:'Palantir',     peso:5,  score:8, color:'var(--cyan)'},
+  {sym:'KO',   nombre:'Coca-Cola',    peso:5,  score:7, color:'var(--mute)'},
+];
+
+function buildPortfolio() {
+  const el = document.getElementById('portBody');
+  const scoreColor = s => s >= 8 ? 'var(--grn)' : s >= 6 ? 'var(--warn)' : 'var(--red)';
+  el.innerHTML = CARTERA.map(a => `
+    <div class="port-row">
+      <span class="port-sym">${a.sym}</span>
+      <div class="port-bar">
+        <div class="port-bar-fill" style="width:${a.peso*5}%;background:${a.color}60"></div>
+      </div>
+      <span class="port-pct" style="color:var(--mute)">${a.peso}%</span>
+      <span class="port-score">
+        <span class="score-dot" style="background:${scoreColor(a.score)}"></span>
+        <span style="font-size:.55rem;color:${scoreColor(a.score)};margin-left:3px">${a.score}/10</span>
+      </span>
+    </div>`).join('');
+}
+buildPortfolio();
+
+// ── Fetch datos reales ────────────────────────────────
+async function fetchLiveData() {
+  try {
+    // Dólares
+    const dol = await corsGet('https://api.bluelytics.com.ar/v2/latest');
+    if (dol.blue) {
+      const blue = dol.blue.value_sell;
+      document.getElementById('mac-blue').textContent = '$' + Math.round(blue).toLocaleString('es-AR');
+      document.getElementById('mac-blue-sub').textContent = `Oficial: $${Math.round(dol.oficial?.value_sell||0).toLocaleString('es-AR')} · Brecha ${(((blue-(dol.oficial?.value_sell||blue))/(dol.oficial?.value_sell||blue))*100).toFixed(1)}%`;
+      document.getElementById('ms-mep').textContent = '$' + Math.round(blue * 0.99).toLocaleString('es-AR');
+    }
+  } catch(e) {}
+
+  try {
+    // Crypto
+    const cr = await corsGet('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true');
+    if (cr.bitcoin) {
+      document.getElementById('mac-btc').textContent = '$' + cr.bitcoin.usd.toLocaleString('en-US', {maximumFractionDigits:0});
+      const chg = cr.bitcoin.usd_24h_change?.toFixed(2);
+      document.getElementById('mac-btc-sub').textContent = `24h: ${chg > 0 ? '+' : ''}${chg}% · ETH: $${cr.ethereum?.usd?.toLocaleString('en-US', {maximumFractionDigits:0})}`;
+    }
+  } catch(e) {}
+
+  document.getElementById('lastUpdate').textContent = '↻ ' + new Date().toLocaleTimeString('es-AR', {hour:'2-digit',minute:'2-digit',timeZone:'America/Argentina/Buenos_Aires'}) + ' BsAs';
+}
+fetchLiveData();
+setInterval(fetchLiveData, 5 * 60 * 1000);
+
+// ── Motor IA Groq ─────────────────────────────────────
+async function callGroq(systemPrompt, userPrompt, maxTokens = 900) {
+  if (!GROQ_KEY) {
+    return '⚙️ Configurá tu Groq API Key en el panel de configuración (esquina inferior derecha).';
+  }
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      max_tokens: maxTokens,
+      messages: [
+        {role: 'system', content: systemPrompt},
+        {role: 'user',   content: userPrompt}
+      ]
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || 'Error Groq');
+  return data.choices?.[0]?.message?.content || '';
+}
+
+function getContexto() {
+  const hora = new Date().toLocaleString('es-AR', {timeZone:'America/Argentina/Buenos_Aires'});
+  return `CONTEXTO MERCADO AR (${hora}):
+Dólar MEP: ~$1.437 | Blue: ~$1.450 | Brecha: ~0.1%
+Riesgo País: 575bps | Reservas BCRA: USD 46.5B
+VIX: 31.2pts | Brent: USD 104.5 | Oro: USD 2.910
+Merval: ~2.150.000 | Inflación anual AR: ~80%
+Conflicto bélico activo: EE.UU.+Israel vs Irán
+Cartera: LMT(15%) NVDA(12%) MELI(12%) XLE(10%) CVX(8%) VIST(8%) AAPL(8%) MSFT(7%) PLTR(5%) KO(5%)`;
+}
+
+// ── 10 Análisis institucionales ───────────────────────
+const PROMPTS = {
+  fundamental: {
+    sys: 'Sos analista senior de equity con 20 años en Goldman Sachs. Análisis riguroso y veredicto claro. Usás formato de texto plano sin markdown.',
+    buildPrompt: t => `${getContexto()}\n\nAnálisis fundamental completo de ${t}:\n• Cómo gana dinero\n• Fuentes de ingresos y crecimiento\n• Márgenes y tendencia\n• Salud financiera: deuda y liquidez\n• Flujo de caja libre\n• Ventajas competitivas (1-10)\n• Calidad del management\n• Valoración vs sector\n• Escenario alcista y bajista con precio objetivo\n• VEREDICTO: Comprar / Mantener / Evitar`
+  },
+  tecnico: {
+    sys: 'Sos estratega técnico profesional de Morgan Stanley. Siempre das entrada, stop y objetivos concretos. Texto plano.',
+    buildPrompt: t => `${getContexto()}\n\nAnálisis técnico completo de ${t}:\n• Tendencia diario/semanal/mensual\n• Soportes y resistencias clave\n• EMAs 20/50/100/200\n• RSI — nivel y señal\n• MACD — cruce y divergencia\n• Bandas de Bollinger\n• Volumen\n• Fibonacci — retrocesos clave\n• Patrones identificados\n\nPLAN DE TRADING:\n• Entrada exacta\n• Stop loss\n• Objetivo 1 y Objetivo 2\n• Ratio R:R`
+  },
+  riesgo: {
+    sys: 'Sos analista de riesgo de hedge fund top tier. Evaluás carteras con rigor cuantitativo. Texto plano.',
+    buildPrompt: t => `${getContexto()}\n\nEvaluá el riesgo de la cartera actual:\n• Volatilidad vs mercado\n• Beta ponderado vs S&P 500\n• Máximas caídas históricas\n• Correlación entre activos\n• Impacto de suba de tasas Fed\n• Caída estimada en crisis -20% S&P\n• Riesgo AR: tipo de cambio y RP\n• Riesgo geopolítico actual\n\nESTRATEGIAS DE PROTECCIÓN:\n• Cobertura recomendada\n• Activos a reducir\n• Activos a aumentar`
+  },
+  earnings: {
+    sys: 'Sos analista de earnings institucional de JPMorgan. Anticipás resultados y das estrategias concretas. Texto plano.',
+    buildPrompt: t => `${getContexto()}\n\nAnálisis de earnings de ${t}:\n• Últimos resultados y reacción del precio\n• Estimaciones del consenso\n• Expectativas reales del mercado\n• Métricas clave a vigilar\n• Guidance del management\n• Movimiento esperado en opciones\n\nESTRATEGIA:\n• Antes de resultados\n• Si sube\n• Si baja\n• Nivel clave post-earnings`
+  },
+  dividendos: {
+    sys: 'Sos gestor de carteras de dividendos de BlackRock. Analizás sostenibilidad y proyección de largo plazo. Texto plano.',
+    buildPrompt: t => `${getContexto()}\n\nAnálisis de dividendos de ${t}:\n• Rentabilidad por dividendo actual\n• Crecimiento histórico (CAGR)\n• Años pagando dividendo\n• Seguridad del dividendo (1-10)\n• Payout ratio\n• FCF para cubrir el dividendo\n• Riesgo de recorte\n\nPROYECCIÓN con USD 10.000:\n• Ingresos anuales estimados\n• A 5, 10 y 20 años con reinversión\n• Comparativa vs inflación`
+  },
+  macro: {
+    sys: 'Sos estratega macro de Citadel con visión global. Identificás el ciclo y das posicionamiento concreto. Texto plano.',
+    buildPrompt: t => `${getContexto()}\n\nAnálisis macro global:\n• Fase del ciclo económico actual\n• Política Fed — próximos movimientos\n• Impacto del conflicto bélico\n• Sectores más fuertes en este ciclo\n• Sectores a evitar\n• Flujo institucional risk-on vs risk-off\n• Impacto en mercados emergentes y Argentina\n\nPOSICIONAMIENTO:\n• Sectores a sobreponderar con ETFs\n• Sectores a subponderar\n• Cobertura próximos 3-6 meses`
+  },
+  ciclo: {
+    sys: 'Sos estratega de sectores de un family office. Identificás qué sobreponderar según el ciclo. Texto plano.',
+    buildPrompt: t => `${getContexto()}\n\nDado el ciclo actual con conflicto bélico, Brent USD 104, VIX 31:\n• Top 3 sectores a sobreponderar HOY con justificación\n• Top 3 sectores a evitar con justificación\n• ETFs disponibles como CEDEAR para cada sector\n• Rotación esperada en 60-90 días\n• Señal para saber cuándo rotar`
+  },
+  cartera: {
+    sys: 'Sos asesor financiero senior. Construís carteras con ETFs disponibles como CEDEARs en Argentina. Texto plano.',
+    buildPrompt: t => `${getContexto()}\n\nCartera óptima para inversor argentino conservador-moderado, 55 años, USD 50.000:\n• Asignación % por clase de activo\n• ETFs/CEDEARs concretos con % de cada uno\n• Rentabilidad esperada anual realista\n• Plan de rebalanceo\n• Estrategia de aporte mensual\n• Cobertura riesgo AR`
+  },
+  opciones: {
+    sys: 'Sos experto en opciones de un prop trading desk. Estrategias con riesgo definido. Texto plano.',
+    buildPrompt: t => `${getContexto()}\n\nEstrategia de opciones para ${t}:\n• Tipo de estrategia recomendada\n• Strike prices y vencimientos\n• Prima estimada\n• Beneficio máximo\n• Pérdida máxima\n• Breakeven\n• Probabilidad de éxito\n• Greeks relevantes\n\nGESTIÓN:\n• Cuándo tomar ganancias\n• Cuándo cortar pérdidas\n• Plan B`
+  },
+  senal: {
+    sys: 'Sos analista institucional que genera señales diarias accionables. Concreto y sin ambigüedades. Texto plano.',
+    buildPrompt: t => `${getContexto()}\n\nIdentificá LA MEJOR OPORTUNIDAD del día entre: LMT, NVDA, MELI, XLE, CVX, VIST, AAPL, PLTR, KO, BTC, USDT\n\nFormato OBLIGATORIO:\nACTIVO: [ticker]\nSETUP: [patrón o situación]\nENTRADA: $[precio]\nSTOP: $[precio] (-X%)\nOBJETIVO 1: $[precio] (+X%)\nOBJETIVO 2: $[precio] (+X%)\nRATIO R:R: [X:1]\nCONTEXTO: [1-2 líneas]\nRIESGO PRINCIPAL: [qué puede invalidar]`
+  },
+};
+
+async function runAnalysis(type) {
+  const ticker = document.getElementById('tickerInput').value.trim().toUpperCase() || 'LMT';
+  const output = document.getElementById('analysisOutput');
+  const p = PROMPTS[type];
+  if (!p) return;
+
+  const labels = {
+    fundamental:'ANÁLISIS FUNDAMENTAL', tecnico:'ANÁLISIS TÉCNICO',
+    riesgo:'ANÁLISIS DE RIESGO', earnings:'EARNINGS ANALYSIS',
+    dividendos:'ANÁLISIS DE DIVIDENDOS', macro:'ANÁLISIS MACRO',
+    ciclo:'CICLO SECTORIAL', cartera:'CARTERA ÓPTIMA',
+    opciones:'ESTRATEGIA DE OPCIONES', senal:'SEÑAL DEL DÍA'
+  };
+
+  output.classList.add('loading');
+  output.innerHTML = `<span class="spinner"></span>${labels[type]} — ${ticker} — Analizando con Groq LLaMA 3.3 70B...`;
+
+  try {
+    const resp = await callGroq(p.sys, p.buildPrompt(ticker));
+    output.classList.remove('loading');
+    output.textContent = resp;
+  } catch(e) {
+    output.classList.remove('loading');
+    output.innerHTML = `<span style="color:var(--red)">❌ Error: ${e.message}</span>`;
+  }
+}
+
+// ── Señal del día ─────────────────────────────────────
+async function generateSignal() {
+  const p = PROMPTS.senal;
+  const raw = await callGroq(p.sys, p.buildPrompt(''), 500);
+
+  // Parsear campos
+  const get = (key) => {
+    const m = raw.match(new RegExp(key + '[:\\s]+([^\\n]+)'));
+    return m ? m[1].trim() : '—';
+  };
+
+  document.getElementById('sig-activo').textContent  = get('ACTIVO');
+  document.getElementById('sig-entrada').textContent = get('ENTRADA');
+  document.getElementById('sig-stop').textContent    = get('STOP');
+  document.getElementById('sig-obj1').textContent    = get('OBJETIVO 1');
+  document.getElementById('sig-obj2').textContent    = get('OBJETIVO 2');
+  document.getElementById('sig-rr').textContent      = get('RATIO R:R');
+  document.getElementById('sig-ctx').textContent     = get('CONTEXTO') + '\n\nRiesgo: ' + get('RIESGO PRINCIPAL');
+}
+
+// Cargar key guardada
+if (GROQ_KEY) {
+  document.getElementById('groqKey').value = GROQ_KEY;
+}
+</script>
+</body>
+</html>
